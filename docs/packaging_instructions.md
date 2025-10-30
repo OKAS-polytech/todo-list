@@ -52,34 +52,50 @@ java -jar dist/todolist-cui.jar
 アプリケーションが起動し、コマンドプロンプトが表示されれば成功です。
 
 ---
+## 4. GUI版アプリケーション
 
-## 4. Windows用EXEファイルの作成 (jpackageを使用)
+### 4.1. マニフェストファイルの作成
+GUIアプリケーション用のマニフェストファイル`MANIFEST-GUI.MF`を作成します。
+
+1.  プロジェクトのルートディレクトリに、以下の内容で`MANIFEST-GUI.MF`ファイルを作成します。
+    ```
+    Main-Class: com.todolist.app.gui.Main
+    ```
+
+### 4.2. JARファイルのパッケージング
+以下のコマンドを実行し、`dist/todolist-gui.jar`を生成します。
+```bash
+jar cvfm dist/todolist-gui.jar MANIFEST-GUI.MF -C out .
+```
+
+### 4.3. 実行確認
+```bash
+java -jar dist/todolist-gui.jar
+```
+TODOリストのウィンドウが表示されれば成功です。
+
+---
+
+## 5. Windows用EXEファイルの作成 (jpackageを使用)
 `jpackage`ツールは、Javaアプリケーションをターゲットプラットフォームのネイティブ形式（Windowsの場合はEXE）にパッケージングします。
 
-### 4.1. jpackageの実行
-Windows環境のコマンドプロンプトまたはPowerShellで、以下のコマンドを実行します。
-
-1.  事前に、上記の手順で`dist/todolist-cui.jar`が作成されていることを確認してください。
-
-2.  プロジェクトのルートディレクトリで、以下の`jpackage`コマンドを実行します。
-    ```bash
-    jpackage --name todolist-cui `
-      --input dist `
-      --main-jar todolist-cui.jar `
-      --main-class com.todolist.app.Main `
-      --type exe `
-      --dest dist `
-      --win-console
+### 5.1. CUI版EXEの作成
+1.  事前に、`dist/todolist-cui.jar`が作成されていることを確認してください。
+2.  Windows環境で以下のコマンドを実行します。
+    ```powershell
+    jpackage --name todolist-cui --input dist --main-jar todolist-cui.jar --main-class com.todolist.app.cui.Main --type exe --dest dist --win-console
     ```
-    - `--name`: アプリケーション名を指定します。
-    - `--input`: 入力となるファイルが含まれるディレクトリ（JARファイルがある場所）を指定します。
-    - `--main-jar`: メインのJARファイルを指定します。
-    - `--main-class`: エントリーポイントとなるクラスを指定します。
-    - `--type`: 生成するパッケージの形式を指定します。Windowsの場合は`exe`または`msi`が選択できます。
-    - `--dest`: 出力先ディレクトリを指定します。
-    - `--win-console`: これを指定することで、コンソールアプリケーションとしてEXEが作成されます。
+    - `--win-console`: コンソールアプリケーションとしてEXEを作成します。
 
-### 4.2. 実行確認
-`dist`ディレクトリ内に`todolist-cui`という名前のディレクトリが生成され、その中に`todolist-cui.exe`ファイルが作成されているはずです。
+### 5.2. GUI版EXEの作成
+1.  事前に、`dist/todolist-gui.jar`が作成されていることを確認してください。
+2.  Windows環境で以下のコマンドを実行します。
+    ```powershell
+    jpackage --name todolist-gui --input dist --main-jar todolist-gui.jar --main-class com.todolist.app.gui.Main --type exe --dest dist
+    ```
+    - GUIアプリの場合、`--win-console`は不要です。
 
-コマンドプロンプトから`todolist-cui.exe`を実行し、アプリケーションが正しく起動することを確認してください。
+### 5.3. 実行確認
+`dist`ディレクトリ内に`todolist-cui`および`todolist-gui`という名前のディレクトリが生成され、その中にそれぞれの`.exe`ファイルが作成されているはずです。
+
+各EXEファイルを実行し、アプリケーションが正しく起動することを確認してください。

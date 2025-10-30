@@ -1,8 +1,7 @@
-package com.todolist.app;
+package com.todolist.app.cui;
 
 import com.todolist.app.domain.TodoService;
 import com.todolist.app.repository.TaskRepository;
-import com.todolist.app.ui.ConsoleController;
 
 public class Main {
     public static void main(String[] args) {

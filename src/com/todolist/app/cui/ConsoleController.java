@@ -1,4 +1,4 @@
-package com.todolist.app.ui;
+package com.todolist.app.cui;
 
 import com.todolist.app.domain.Task;
 import com.todolist.app.domain.TodoService;

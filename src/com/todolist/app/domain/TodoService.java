@@ -1,0 +1,45 @@
+package com.todolist.app.domain;
+
+import com.todolist.app.repository.TaskRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public class TodoService {
+    private final TaskRepository taskRepository;
+
+    public TodoService(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
+
+    public Task addTask(String description) {
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("タスクの内容は空にできません。");
+        }
+        return taskRepository.create(description);
+    }
+
+    public List<Task> getAllTasks() {
+        return taskRepository.findAll();
+    }
+
+    public boolean completeTask(int id) {
+        Optional<Task> taskOptional = taskRepository.findById(id);
+        if (taskOptional.isPresent()) {
+            Task task = taskOptional.get();
+            if (!task.isDone()) {
+                task.setDone(true);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean deleteTask(int id) {
+        if (taskRepository.findById(id).isPresent()) {
+            taskRepository.delete(id);
+            return true;
+        }
+        return false;
+    }
+}

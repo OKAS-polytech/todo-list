@@ -4,7 +4,10 @@ import com.todolist.app.domain.Task;
 import com.todolist.app.domain.TodoService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ConsoleController {
     private final TodoService todoService;
@@ -18,7 +21,7 @@ public class ConsoleController {
     public void start() {
         System.out.println("Todoリストアプリケーションへようこそ！");
         while (true) {
-            System.out.println("コマンドを入力してください (add, list, done, delete, exit):");
+            System.out.println("コマンドを入力してください (add, list, done, delete, memo, exit):");
             System.out.print("> ");
             String input = scanner.nextLine();
             String[] parts = input.trim().split(" ", 2);
@@ -26,28 +29,23 @@ public class ConsoleController {
 
             switch (command) {
                 case "add":
-                    if (parts.length > 1) {
-                        addTask(parts[1]);
-                    } else {
-                        System.out.println("エラー: タスクの内容を入力してください。");
-                    }
+                    if (parts.length > 1) addTask(parts[1]);
+                    else System.out.println("エラー: add \"<内容>\" [\"<メモ>\"] の形式で入力してください。");
                     break;
                 case "list":
                     displayTasks();
                     break;
                 case "done":
-                    if (parts.length > 1) {
-                        completeTask(parts[1]);
-                    } else {
-                        System.out.println("エラー: タスクIDを入力してください。");
-                    }
+                    if (parts.length > 1) completeTask(parts[1]);
+                    else System.out.println("エラー: done <ID> の形式で入力してください。");
                     break;
                 case "delete":
-                    if (parts.length > 1) {
-                        deleteTask(parts[1]);
-                    } else {
-                        System.out.println("エラー: タスクIDを入力してください。");
-                    }
+                    if (parts.length > 1) deleteTask(parts[1]);
+                    else System.out.println("エラー: delete <ID> の形式で入力してください。");
+                    break;
+                case "memo":
+                    if (parts.length > 1) updateMemo(parts[1]);
+                    else System.out.println("エラー: memo <ID> \"<メモ>\" の形式で入力してください。");
                     break;
                 case "exit":
                     System.out.println("アプリケーションを終了します。");
@@ -59,12 +57,17 @@ public class ConsoleController {
         }
     }
 
-    private void addTask(String description) {
-        try {
-            todoService.addTask(description);
+    private void addTask(String args) {
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"\\s*\"?([^\"]*)\"?");
+        Matcher matcher = pattern.matcher(args);
+
+        if (matcher.find()) {
+            String description = matcher.group(1);
+            String memo = matcher.group(2);
+            todoService.addTask(description, memo);
             System.out.println("タスクを追加しました。");
-        } catch (IllegalArgumentException e) {
-            System.out.println("エラー: " + e.getMessage());
+        } else {
+            System.out.println("エラー: add \"<内容>\" [\"<メモ>\"] の形式で入力してください。");
         }
     }
 
@@ -76,6 +79,9 @@ public class ConsoleController {
         } else {
             for (Task task : tasks) {
                 System.out.println(task);
+                if (task.getMemo() != null && !task.getMemo().isEmpty()) {
+                    System.out.println("    └ メモ: " + task.getMemo());
+                }
             }
         }
         System.out.println("------------------");
@@ -104,6 +110,27 @@ public class ConsoleController {
             }
         } catch (NumberFormatException e) {
             System.out.println("エラー: IDは数値で入力してください。");
+        }
+    }
+
+    private void updateMemo(String args) {
+        Pattern pattern = Pattern.compile("(\\d+)\\s*\"([^\"]*)\"");
+        Matcher matcher = pattern.matcher(args);
+
+        if (matcher.find()) {
+            try {
+                int id = Integer.parseInt(matcher.group(1));
+                String memo = matcher.group(2);
+                if (todoService.updateMemo(id, memo)) {
+                    System.out.println("タスク(ID: " + id + ")のメモを更新しました。");
+                } else {
+                    System.out.println("エラー: 指定されたIDのタスクは存在しません。");
+                }
+            } catch (NumberFormatException e) {
+                 System.out.println("エラー: IDは数値で入力してください。");
+            }
+        } else {
+            System.out.println("エラー: memo <ID> \"<メモ>\" の形式で入力してください。");
         }
     }
 }

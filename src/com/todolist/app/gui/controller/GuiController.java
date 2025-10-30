@@ -16,40 +16,36 @@ public class GuiController {
         this.todoService = todoService;
         this.todoFrame = todoFrame;
 
-        // Viewにイベントリスナーを登録
+        // イベントリスナーの登録
         this.todoFrame.addAddButtonListener(e -> addTask());
         this.todoFrame.addCompleteButtonListener(e -> completeTasks());
         this.todoFrame.addDeleteButtonListener(e -> deleteTasks());
+        this.todoFrame.addSaveMemoButtonListener(e -> saveMemo());
+        this.todoFrame.addTaskListSelectionListener(e -> onTaskSelection());
     }
 
     public void initView() {
-        // 初期データを表示
         refreshTaskList();
     }
 
     private void addTask() {
         String description = todoFrame.getTaskInputField().getText().trim();
         if (description.isEmpty()) {
-            todoFrame.showErrorMessage("タスクの内容を入力してください。");
+            todoFrame.showMessage("タスクの内容を入力してください。", "エラー", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        try {
-            todoService.addTask(description);
-            todoFrame.clearInputField();
-            refreshTaskList();
-        } catch (IllegalArgumentException e) {
-            todoFrame.showErrorMessage(e.getMessage());
-        }
+        todoService.addTask(description, ""); // GUIではメモは後から編集
+        todoFrame.clearInputField();
+        refreshTaskList();
     }
 
     private void completeTasks() {
         List<Task> selectedTasks = todoFrame.getTaskList().getSelectedValuesList();
         if (selectedTasks.isEmpty()) {
-            todoFrame.showErrorMessage("完了するタスクを選択してください。");
+            todoFrame.showMessage("完了するタスクを選択してください。", "情報", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
         for (Task task : selectedTasks) {
             todoService.completeTask(task.getId());
         }
@@ -59,7 +55,7 @@ public class GuiController {
     private void deleteTasks() {
         List<Task> selectedTasks = todoFrame.getTaskList().getSelectedValuesList();
         if (selectedTasks.isEmpty()) {
-            todoFrame.showErrorMessage("削除するタスクを選択してください。");
+            todoFrame.showMessage("削除するタスクを選択してください。", "情報", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -75,6 +71,29 @@ public class GuiController {
                 todoService.deleteTask(task.getId());
             }
             refreshTaskList();
+            todoFrame.setMemoText(""); // 削除後はメモエリアをクリア
+        }
+    }
+
+    private void saveMemo() {
+        Task selectedTask = todoFrame.getTaskList().getSelectedValue();
+        if (selectedTask == null) {
+            todoFrame.showMessage("メモを保存するタスクを選択してください。", "情報", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        String memo = todoFrame.getMemoArea().getText();
+        if (todoService.updateMemo(selectedTask.getId(), memo)) {
+             todoFrame.showMessage("メモを保存しました。", "成功", JOptionPane.INFORMATION_MESSAGE);
+             refreshTaskList(); // "(メモあり)" の表示を更新するためにリストも更新
+        } else {
+             todoFrame.showMessage("メモの保存に失敗しました。", "エラー", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void onTaskSelection() {
+        Task selectedTask = todoFrame.getTaskList().getSelectedValue();
+        if (selectedTask != null) {
+            todoFrame.setMemoText(selectedTask.getMemo());
         }
     }
 

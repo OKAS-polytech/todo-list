@@ -12,11 +12,11 @@ public class TodoService {
         this.taskRepository = taskRepository;
     }
 
-    public Task addTask(String description) {
+    public Task addTask(String description, String memo) {
         if (description == null || description.trim().isEmpty()) {
             throw new IllegalArgumentException("タスクの内容は空にできません。");
         }
-        return taskRepository.create(description);
+        return taskRepository.create(description, memo);
     }
 
     public List<Task> getAllTasks() {
@@ -29,7 +29,19 @@ public class TodoService {
             Task task = taskOptional.get();
             if (!task.isDone()) {
                 task.setDone(true);
+                taskRepository.update(task); // データベースに更新を反映
             }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateMemo(int id, String memo) {
+        Optional<Task> taskOptional = taskRepository.findById(id);
+        if (taskOptional.isPresent()) {
+            Task task = taskOptional.get();
+            task.setMemo(memo);
+            taskRepository.update(task); // データベースに更新を反映
             return true;
         }
         return false;

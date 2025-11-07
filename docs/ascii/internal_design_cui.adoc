@@ -1,0 +1,47 @@
+= CUI版TODOリストアプリケーション 内部設計書
+
+== 1. 概要
+本文書は、CUI版TODOリストアプリケーションの内部設計を定義するものである。オブジェクト指向に基づいたクラス設計、責務の分離、および主要な処理フローについて記述する。
+
+== 2. 設計方針
+* *責務の分離*:
+** *ドメイン層*: ビジネスロジックを担当。
+** *データ層 (リポジトリ)*: データの永続化を担当。SQLiteデータベースにアクセスする。
+** *プレゼンテーション層 (UI)*: ユーザーとの対話を担当。
+** *アプリケーション層 (メイン)*: 全体の処理フローを制御する。
+* *永続化*: SQLiteを使用し、アプリケーションの状態を`+todolist.db+`ファイルに保存する。
+
+== 3. クラス設計
+
+=== 3.1. `+com.todolist.app.domain.Task+` (ドメインオブジェクト)
+* *フィールド:*:
+** `+id+` (int), `+description+` (String), `+memo+` (String), `+isDone+` (boolean)
+* *責務*: 一つのタスク情報を保持する。
+
+=== 3.2. `+com.todolist.app.repository.DatabaseManager+` (データ層)
+* *責務*:
+** SQLiteデータベースへの接続 (`+Connection+`) を提供する。
+** アプリケーション起動時に`+tasks+`テーブルが存在しない場合に自動作成する。
+
+=== 3.3. `+com.todolist.app.repository.TaskRepository+` (データ層)
+* *責務*: `+DatabaseManager+`を利用して、`+tasks+`テーブルに対するCRUD（Create, Read, Update, Delete）操作を実装する。JDBCを用いてSQLを実行する。
+
+=== 3.4. `+com.todolist.app.domain.TodoService+` (ドメイン層)
+* *責務*: ビジネスロジックを実装する。`+TaskRepository+` を通じてタスク操作を行う。
+* *メソッド:*:
+** `+addTask(String description, String memo)+`: タスクとメモを追加する。
+** `+getAllTasks()+`: 全タスクを取得する。
+** `+completeTask(int id)+`: タスクを完了状態にする。
+** `+updateMemo(int id, String memo)+`: メモを更新する。
+** `+deleteTask(int id)+`: タスクを削除する。
+
+=== 3.5. `+com.todolist.app.cui.ConsoleController+` (プレゼンテーション層)
+* *責務*: ユーザーからのコマンド入力を受け付け、`+TodoService+` を呼び出し、結果をコンソールに出力する。
+* *コマンド処理*: `+add+`, `+list+`, `+done+`, `+delete+`, `+memo+`, `+exit+`の各コマンドを解釈し、対応するサービスメソッドを呼び出す。
+
+=== 3.6. `+com.todolist.app.cui.Main+` (アプリケーション層)
+* *責務*: アプリケーションのエントリーポイント。
+* *処理フロー*:
+. `+DatabaseManager.initializeDatabase()+`を呼び出し、データベースとテーブルを準備する。
+. `+TaskRepository+`, `+TodoService+`, `+ConsoleController+` のインスタンスを生成する。
+. `+ConsoleController.start()+` を呼び出し、メインループを開始する。
